@@ -6,23 +6,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Blackout {
-    
-    private String id;
-    private String type;
-    private double position;
-    private double height = 3000;
 
     public void createDevice(String id, String type, double position) {
-        this.id = id;
-        this.type = type;
-        this.position = position;
+        // TODO:
     }
 
     public void createSatellite(String id, String type, double height, double position) {
-        this.id = id;
-        this.type = type;
-        this.position = position;
-        this.height = height;
+        // TODO:
     }
 
     public void scheduleDeviceActivation(String deviceId, LocalTime start, int durationInMinutes) {
