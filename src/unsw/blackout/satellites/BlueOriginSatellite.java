@@ -10,10 +10,10 @@ public class BlueOriginSatellite extends Satellite {
     private int desktopLimit = 2;
 
     // Constructor
-    public BlueOriginSatellite(int height, String id, double position) {
-        super(height, id, position, "BlueOriginSatellite", 8500);
+    public BlueOriginSatellite(double height, String id, double position) {
+        super(height, id, position, "BlueOriginSatellite", 141.66);
     }
-    
+
     // Getters
     public int getDeviceLimit()  { return deviceLimit; }
     public int getLaptopLimit()  { return laptopLimit; }

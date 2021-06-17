@@ -11,8 +11,8 @@ public class SovietSatellite extends Satellite {
     private int    regionRangeMax     = 190;
 
     // Constructor
-    public SovietSatellite(int height, String id, double position) {
-        super(height, id, position, "SovietSatellite", 6000);
+    public SovietSatellite(double height, String id, double position) {
+        super(height, id, position, "SovietSatellite", 100);
     }
     
     // Getters

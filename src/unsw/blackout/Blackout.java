@@ -7,7 +7,9 @@ import org.json.JSONObject;
 
 import unsw.blackout.MathsHelper;
 import unsw.blackout.WorldState;
-import unsw.blackout.devices.*;
+import unsw.blackout.devices.DesktopDevice;
+import unsw.blackout.devices.HandheldDevice;
+import unsw.blackout.devices.LaptopDevice;
 import unsw.blackout.satellites.*;
 import unsw.blackout.Device;
 import unsw.blackout.Satellite;
@@ -22,32 +24,49 @@ public class Blackout {
     }
 
     public void createDevice(String id, String type, double position) {
-        if (type.equals("HandheldDevice"))    new HandheldDevice(id, position);
-        else if (type.equals("LaptopDevice")) new LaptopDevice(id, position);
-        else                                  new DesktopDevice(id, position);
+        if (type.equals("HandheldDevice"))    worldState.addDevice(new HandheldDevice(id, position));
+        else if (type.equals("LaptopDevice")) worldState.addDevice(new LaptopDevice(id, position));
+        else                                  worldState.addDevice(new DesktopDevice(id, position));
     }
 
     public void createSatellite(String id, String type, double height, double position) {
-        if (type.equals("SpaceXSatellite"))          new SpaceXSatellite(height, id, position);
-        else if (type.equals("BlueOriginSatellite")) new BlueOriginSatellite(height, id, position);
-        else if (type.equals("NasaSatellite"))       new NasaSatellite(height, id, position);
-        else                                         new SovietSatellite(height, id, position);
+        if (type.equals("SpaceXSatellite"))          worldState.addSatellite(new SpaceXSatellite(height, id, position));
+        else if (type.equals("BlueOriginSatellite")) worldState.addSatellite(new BlueOriginSatellite(height, id, position));
+        else if (type.equals("NasaSatellite"))       worldState.addSatellite(new NasaSatellite(height, id, position));
+        else                                         worldState.addSatellite(new SovietSatellite(height, id, position));
     }
 
     public void scheduleDeviceActivation(String deviceId, LocalTime start, int durationInMinutes) {
-        worldState.getDevice(deviceId).setActivationPeriods(start, start.plusMinutes(durationInMinutes));
+        Device theDevice = new Device("404notFound", 0, "404notFound");
+        for (Device device : worldState.getDevices()) {
+            if (device.getId().equals(deviceId)) theDevice = device;
+        }
+        theDevice.setActivationPeriods(start, start.plusMinutes(durationInMinutes));
     }
 
     public void removeSatellite(String id) {
-        worldState.getSatellite(id).remove();
+        Satellite theSatellite = new Satellite(0, "404notFound", 0, "404notFound", 0);
+        for (Satellite satellite : worldState.getSatellites()) {
+            if (satellite.getId().equals(satelliteId)) theSatellite = satellite;
+        }
+        theSatellite.setActivationPeriods(start, start.plusMinutes(durationInMinutes));
+        worldState.removeSatellite(theSatellite);
     }
 
     public void removeDevice(String id) {
-        worldState.getDevice(id).remove();
+        Device theDevice = new Device("404notFound", 0, "404notFound");
+        for (Device device : worldState.getDevices()) {
+            if (device.getId().equals(id)) theDevice = device;
+        }
+        worldState.removeDevice(theDevice);
     }
 
     public void moveDevice(String id, double newPos) {
-        worldState.getDevice(id).setPosition(newPos);
+        Device theDevice = new Device("404notFound", 0, "404notFound");
+        for (Device device : worldState.getDevices()) {
+            if (device.getId().equals(id)) theDevice = device;
+        }
+        theDevice.setPosition(newPos);
     }
 
     public JSONObject showWorldState() {
@@ -80,7 +99,7 @@ public class Blackout {
                 satelliteConnection.put("minutesActive", connection.getMinutesActive());  // "minutesActive" :
                 satelliteConnection.put("satelliteId", connection.getSatelliteId());      // "satelliteId" :
                 satelliteConnection.put("startTime", connection.getStartTime());          // "startTime" :
-                connections.add(satelliteConnection);                            // }
+                connections.put(satelliteConnection);                            // }
             }                                                               
             map.put("connections", connections);                            // ],
             map.put("height", satellite.getHeight());                       // "height" :
@@ -90,17 +109,17 @@ public class Blackout {
             for (Device device : worldState.getDevices()) {              
                 if (MathsHelper.satelliteIsVisibleFromDevice(satellite.getPosition(), satellite.getHeight(), device.getPosition())) {
                     if (satellite.getType().equals("SpaceXSatellite") && device.getType().equals("HandHeldDevice"))
-                        possibleConnList.add(device.getId());
+                        possibleConnList.put(device.getId());
                     else if (satellite.getType().equals("BlueOriginSatellite") || satellite.getType().equals("NasaSatellite")) 
-                        possibleConnList.add(device.getId());
+                        possibleConnList.put(device.getId());
                     else if (satellite.getType().equals("SovietSatellite") && !(device.getType().equals("HandHeldDevice")))
-                        possibleConnList.add(device.getId());
+                        possibleConnList.put(device.getId());
                 }
             }                                                               
             map.put("possibleConnections", possibleConnList);               // ],
             map.put("type", satellite.getType());                           // "type" : 
             map.put("velocity", satellite.getVelocity());                   // "velocity" :
-            satellite.put(map);                                  // }
+            satellites.put(map);                                  // }
         } // ]
 
         result.put("devices", devices);

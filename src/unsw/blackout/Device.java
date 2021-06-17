@@ -8,13 +8,13 @@ public class Device {
 
     private ArrayList<HashMap<String, LocalTime>> activationPeriods;
     private String                                id;
-    private boolean                               isConnected = False;
+    private boolean                               isConnected = false;
     private double                                position;
     private String                                type;
 
     // Constructor
     public Device(String id, double position, String type) {
-        this.activationPeriods = new HashMap<String, LocalTime>();
+        this.activationPeriods = new ArrayList<HashMap<String, LocalTime>>();
         this.id = id;
         this.position = position;
         this.type = type;

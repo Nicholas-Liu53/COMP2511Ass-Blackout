@@ -13,7 +13,7 @@ public class WorldState {
     private ArrayList<Device> devices;
 
     // Constructor
-    public WorldState(Localtime currentTime) {
+    public WorldState(LocalTime currentTime) {
         this.currentTime = currentTime;
         this.satellites  = new ArrayList<Satellite>();
         this.devices     = new ArrayList<Device>();
@@ -21,16 +21,20 @@ public class WorldState {
 
     // Getter
     public LocalTime getTime() { return currentTime; }
-    public Device getDevice(String id) {
-        for (Device device : devices)
-            if (device.getId().equals(id)) return device;
-        return false; 
-    }
-    public Satellite getSatellite(String id) {
-        for (Satellite satellite : satellites)
-            if (satellite.getId().equals(id)) return satellite;
-        return false; 
-    }
     public ArrayList<Device>    getDevices()    { return devices; }
     public ArrayList<Satellite> getSatellites() { return satellites; }
+
+    // Setters
+    public void addDevice(Device device) {
+        devices.add(device);
+    }
+    public void addSatellite(Satellite satellite) {
+        satellites.add(satellite);
+    }
+    public void removeDevice(Device device) {
+        devices.remove(device);
+    }
+    public void removeSatellite(Satellite satellite) {
+        satellites.remove(satellite);
+    }
 }
