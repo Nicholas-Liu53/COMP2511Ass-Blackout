@@ -8,8 +8,8 @@ public class LaptopDevice extends Device {
     private int connectTime = 2;
 
     // Constructor
-    public LaptopDevice(LocalTime startTime, LocalTime endTime, String id, int position) {
-        super(startTime, endTime, id, position, "LaptopDevice");
+    public LaptopDevice(String id, double position) {
+        super(id, position, "LaptopDevice");
     }
 
     // Getters

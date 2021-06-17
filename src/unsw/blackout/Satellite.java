@@ -1,19 +1,22 @@
 package unsw.blackout;
 
 // import java.time.LocalTime;
+import java.util.ArrayList;
+
 import unsw.blackout.SatelliteConnection;
 
 public class Satellite {
 
-    private int                   height;
-    private String                id;
-    private float                 position;
-    private SatelliteConnection[] possibleConnections;
-    private String                type;
-    private float                 velocity;
+    private double                         height;
+    private String                         id;
+    private double                         position;
+    private ArrayList<SatelliteConnection> connections;
+    private ArrayList<SatelliteConnection> activeConnections;
+    private String                         type;
+    private double                         velocity;
 
     // Constructor
-    public Satellite(int height, String id, float position, String type, float velocity) {
+    public Satellite(int height, String id, double position, String type, double velocity) {
         this.height = height;
         this.id = id;
         this.position = position;
@@ -22,9 +25,10 @@ public class Satellite {
     }
     
     // Getters
-    public int    getHeight()   { return height; }
-    public String getId()       { return id; }
-    public float  getPosition() { return position; }
-    public String getType()     { return type; }
-    public float  getVelocity() { return velocity; }
+    public int                            getHeight()   { return height; }
+    public String                         getId()       { return id; }
+    public double                         getPosition() { return position; }
+    public String                         getType()     { return type; }
+    public double                         getVelocity() { return velocity; }
+    public ArrayList<SatelliteConnection> getConnections() { return connections; }
 }

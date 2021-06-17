@@ -8,7 +8,7 @@ public class SpaceXSatellite extends Satellite {
     private String acceptableDevice = "HandheldDevice";
 
     // Constructor
-    public SpaceXSatellite(int height, String id, float position) {
+    public SpaceXSatellite(int height, String id, double position) {
         super(height, id, position, "SpaceXSatellite", 3330);
     }
     

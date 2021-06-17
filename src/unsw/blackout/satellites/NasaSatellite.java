@@ -11,7 +11,7 @@ public class NasaSatellite extends Satellite {
     private int regionRangeMax = 40;
 
     // Constructor
-    public NasaSatellite(int height, String id, float position) {
+    public NasaSatellite(int height, String id, double position) {
         super(height, id, position, "NasaSatellite", 5100);
     }
     
