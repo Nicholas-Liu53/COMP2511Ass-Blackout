@@ -2,9 +2,6 @@ package unsw.blackout;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
-import unsw.blackout.Device;
-import unsw.blackout.Satellite;
-import unsw.blackout.Blackout;
 
 public class WorldState {
 
@@ -19,12 +16,15 @@ public class WorldState {
         this.devices     = new ArrayList<Device>();
     }
 
-    // Getter
-    public LocalTime getTime() { return currentTime; }
+    // Getters
+    public LocalTime            getTime()       { return currentTime; }
     public ArrayList<Device>    getDevices()    { return devices; }
     public ArrayList<Satellite> getSatellites() { return satellites; }
 
     // Setters
+    public void nextMinute() {
+        currentTime = currentTime.plusMinutes(1);
+    }
     public void addDevice(Device device) {
         devices.add(device);
     }

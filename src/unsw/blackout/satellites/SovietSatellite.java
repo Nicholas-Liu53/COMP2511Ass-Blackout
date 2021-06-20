@@ -9,6 +9,7 @@ public class SovietSatellite extends Satellite {
     private int    deviceLimit        = 9;
     private int    regionRangeMin     = 140;
     private int    regionRangeMax     = 190;
+    private int    mostRecentBound;
 
     // Constructor
     public SovietSatellite(double height, String id, double position) {
@@ -20,4 +21,22 @@ public class SovietSatellite extends Satellite {
     public int    deviceLimit()           { return deviceLimit; }
     public int    getRegionMin()          { return regionRangeMin; }
     public int    getRegionMax()          { return regionRangeMax; }
+    public int    getMostRecentBound()    { return mostRecentBound; }
+
+    // Setters
+    @Override
+    public void newPosOneMinLater() {
+        if (position > 140 && position < 190) {
+            if (mostRecentBound == 190) position = (position - velocity / height) % 360;
+            else position = (position + velocity / height) % 360;
+        } else {
+            if (position <= 345 && position > 190) {
+                mostRecentBound = 190;
+                position = (position - velocity / height) % 360;
+            } else {
+                mostRecentBound = 140;
+                position = (position + velocity / height) % 360;
+            }
+        }
+    }
 }

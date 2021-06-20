@@ -40,7 +40,7 @@ public class Cli {
     }
 
     /// Processes a given command.
-    public void processCommand(JSONObject json) {
+    public void processCommand(JSONObject json) throws Exception {
         switch (json.getString("command")) {
         case "createDevice": {
             String id = json.getString("id");
