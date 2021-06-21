@@ -33,17 +33,6 @@ public class Satellite {
     public ArrayList<SatelliteConnection> getConnections()       { return connections; }
     public ArrayList<SatelliteConnection> getActiveConnections() { return activeConnections; }
 
-    // Setters
-    public void newPosOneMinLater() {
-        position = (position + velocity / height) % 360;
-    }
-    public void addConnection(SatelliteConnection connection) {
-        connections.add(connection);
-        activeConnections.add(connection);
-    }
-    public void removeActiveConnection(SatelliteConnection connection) {
-        activeConnections.remove(connection);
-    }
     public int getLaptopConnections() {
         int count = 0;
         for (SatelliteConnection c : activeConnections) {
@@ -57,6 +46,19 @@ public class Satellite {
             if (c.getDevice().getType().equals("DesktopDevice")) count++;
         }
         return count;
+    }
+    
+
+    // Setters
+    public void newPosOneMinLater() {
+        position = (position + velocity / height) % 360;
+    }
+    public void addConnection(SatelliteConnection connection) {
+        connections.add(connection);
+        activeConnections.add(connection);
+    }
+    public void removeActiveConnection(SatelliteConnection connection) {
+        activeConnections.remove(connection);
     }
     
     // Helper Functions

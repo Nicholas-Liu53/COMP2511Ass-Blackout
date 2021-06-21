@@ -123,7 +123,10 @@ public class Blackout {
             for (SatelliteConnection connection : satellite.getConnections()) {  // {
                 JSONObject satelliteConnection = new JSONObject();
                 satelliteConnection.put("deviceId", connection.getDeviceId());            // "deviceId" :
-                satelliteConnection.put("endTime", connection.getEndTime());              // "endTime" :
+                if (connection.getEndTime() != null)
+                    satelliteConnection.put("endTime", connection.getEndTime());              // "endTime" :
+                else
+                    satelliteConnection.put("endTime", JSONObject.NULL);
                 satelliteConnection.put("minutesActive", connection.getMinutesActive());  // "minutesActive" :
                 satelliteConnection.put("satelliteId", connection.getSatelliteId());      // "satelliteId" :
                 satelliteConnection.put("startTime", connection.getStartTime());          // "startTime" :
@@ -248,7 +251,7 @@ public class Blackout {
 
     //* Helper Functions
     // Finds the active connection of a device
-    public ArrayList<SatelliteConnection> findActiveConnectionsByDevice(Device device) {
+    private ArrayList<SatelliteConnection> findActiveConnectionsByDevice(Device device) {
         ArrayList<SatelliteConnection> l = new ArrayList<SatelliteConnection>();
         for (Satellite satellite : worldState.getSatellites()) {
             for (SatelliteConnection connection : satellite.getActiveConnections()) {
@@ -260,7 +263,7 @@ public class Blackout {
     }
 
     // Finds available satellites for a device and sorts them by type
-    public ArrayList<Satellite> findSatellitesForDevice(Device device) throws Exception {
+    private ArrayList<Satellite> findSatellitesForDevice(Device device) throws Exception {
         ArrayList<Satellite> list = new ArrayList<Satellite>();
         for (Satellite satellite : worldState.getSatellites()) {
             if (hasExistingConnection(device, satellite)) continue;
@@ -271,9 +274,9 @@ public class Blackout {
                     if (satellite.getActiveConnections().size() < 11) {
                         if (device.getType().equals("HandheldDevice"))
                             list.add(satellite);
-                        else if (device.getType().equals("LaptopDevice") && satellite.getLaptopConnections() < 6)
+                        else if (device.getType().equals("LaptopDevice") && satellite.getLaptopConnections() < 5)
                             list.add(satellite);
-                        else if ((device.getType().equals("DesktopDevice") || device.getType().equals("AWSCloudServer")) && satellite.getDesktopConnections() < 3)
+                        else if ((device.getType().equals("DesktopDevice") || device.getType().equals("AWSCloudServer")) && satellite.getDesktopConnections() < 2)
                             list.add(satellite);
                     }
                 } else if (satellite.getType().equals("SovietSatellite") && !device.getType().equals("HandheldDevice") && !device.getType().equals("MobileXPhone"))
@@ -294,7 +297,7 @@ public class Blackout {
     }
     
     // Connects device and satellite
-    public SatelliteConnection connectDeviceToSatellite(Device device, Satellite satellite) {
+    private SatelliteConnection connectDeviceToSatellite(Device device, Satellite satellite) {
         // Gotta do some stuff for Soviet and Nasa cos they drop connections to connect to new
         if (satellite.getType().equals("SovietSatellite") && satellite.getActiveConnections().size() == 9) {
             satellite.getActiveConnections().get(0).terminateConnection(worldState.getTime());
@@ -314,7 +317,7 @@ public class Blackout {
     }
 
     // Returns an array list containing a SpaceXSatellite
-    public ArrayList<Satellite> findSpaceX(ArrayList<Satellite> satellitesInRange) {
+    private ArrayList<Satellite> findSpaceX(ArrayList<Satellite> satellitesInRange) {
         ArrayList<Satellite> list = new ArrayList<Satellite>();
         for (Satellite s : satellitesInRange) {
             if (s.getType().equals("SpaceXSatellite")) 
@@ -323,7 +326,7 @@ public class Blackout {
         return list;
     }
     // Determines whether a device and a satellite has an existing connection
-    public boolean hasExistingConnection(Device d, Satellite s) {
+    private boolean hasExistingConnection(Device d, Satellite s) {
         ArrayList<SatelliteConnection> connections = findActiveConnectionsByDevice(d);
         for (SatelliteConnection c : connections) {
             if (c.getDevice().equals(d) && c.getSatellite().equals(s))

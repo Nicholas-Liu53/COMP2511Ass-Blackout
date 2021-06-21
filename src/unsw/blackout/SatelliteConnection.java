@@ -6,7 +6,7 @@ import java.time.temporal.ChronoUnit;
 public class SatelliteConnection {
 
     private Device    device;
-    private LocalTime endTime;
+    private LocalTime endTime = null;
     private int       minutesActive;
     private Satellite satellite;
     private LocalTime startTime;
@@ -16,6 +16,7 @@ public class SatelliteConnection {
         this.device = device;
         this.satellite = satellite;
         this.startTime = startTime;
+        this.endTime = null;
     }
     
     // Getters

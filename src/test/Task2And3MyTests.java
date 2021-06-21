@@ -31,11 +31,11 @@ public class Task2And3MyTests {
             > createSatellite SpaceXSatellite SpaceX 10000.00 100.00
             <
             > showWorldState
-            < { WorldState }
+            < { <WorldState> }
             > simulate 1440
             <
             > showWorldState
-            < { WorldState }
+            < { <WorldState> }
         */
         String initially = new ResponseHelper(LocalTime.of(0, 0))
             .expectSatellite("BlueOriginSatellite", "BlueOrigin", 10000, 0, 141.67, new String[] { "DeviceHandheld", "DeviceMobileX" })
@@ -99,11 +99,11 @@ public class Task2And3MyTests {
             > createSatellite BlueOriginSatellite C 10000.00 350.00
             <
             > showWorldState
-            < { WorldState }
+            < { <WorldState> }
             > simulate 1440
             <
             > showWorldState
-            < { WorldState }
+            < { <WorldState> }
         */
         String initially = new ResponseHelper(LocalTime.of(0, 0))
             .expectSatellite("BlueOriginSatellite", "A", 10000, 120, 141.67, new String[] { "AWS" })
@@ -143,6 +143,427 @@ public class Task2And3MyTests {
             .createSatellite("BlueOriginSatellite", "A", 10000.00, 120.00)
             .createSatellite("BlueOriginSatellite", "B", 10000.00, 20.00)
             .createSatellite("BlueOriginSatellite", "C", 10000.00, 350.00)
+            .showWorldState(initially)
+            .simulate(1440)
+            .showWorldState(oneDayAfter);
+        plan.executeTestPlan();
+    }
+
+    @Test
+    public void testInside3040RegionConnectForNasa() {
+        // Tests if a device in the region [30,40] connects to the Nasa Satellite
+        // if the Nasa Satellite already has 6 connections
+        /* 
+            CLI commands:
+            > createDevice LaptopDevice Laptop1 275.00
+            < 
+            > scheduleDeviceActivation Laptop1 00:00 1439
+            <
+            > createDevice DesktopDevice Desktop1 290.00
+            < 
+            > scheduleDeviceActivation Desktop1 00:00 1439
+            <
+            > createDevice LaptopDevice Laptop2 305.00
+            < 
+            > scheduleDeviceActivation Laptop2 00:00 1439
+            <
+            > createDevice DesktopDevice Desktop2 320.00
+            < 
+            > scheduleDeviceActivation Desktop2 00:00 1439
+            <
+            > createDevice LaptopDevice Laptop3 335.00
+            <
+            > scheduleDeviceActivation Laptop3 00:00 1439
+            <
+            > createDevice DesktopDevice Desktop3 350.00
+            <
+            > scheduleDeviceActivation Desktop3 00:00 1439
+            <
+            > createDevice DesktopDevice Desktop4inthezone 40.00
+            <
+            > scheduleDeviceActivation Desktop4inthezone 00:00 1439
+            <
+            > createSatellite NasaSatellite Nasa 8000.00 310.00
+            <
+            > showWorldState
+            < { <WorldState> }
+            > simulate 1440
+            <
+            > showWorldState
+            < { <WorldState> }
+        */
+        String initially = new ResponseHelper(LocalTime.of(0,0))
+            .expectSatellite(
+                "NasaSatellite", "Nasa", 8000, 310, 85, 
+                new String[] {
+                    "Desktop1", "Desktop2", "Desktop3", "Laptop1", "Laptop2", "Laptop3"
+                }
+            ).expectDevice(
+                "DesktopDevice", "Desktop1", 290, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop2", 320, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop3", 350, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop4inthezone", 40, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop1", 275, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop2", 305, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop3", 335, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).toString();
+        
+        String oneDayAfter = new ResponseHelper(LocalTime.of(0,0))
+            .expectSatellite(
+                "NasaSatellite", "Nasa", 8000, 325.3, 85, 
+                new String[] {
+                    "Desktop1", "Desktop2", "Desktop3", "Desktop4inthezone", "Laptop1", "Laptop2", "Laptop3"
+                }, 
+                new DummyConnection[] {
+                    new DummyConnection("Desktop1", LocalTime.of(0, 0), LocalTime.of(16, 57), 1007),
+                    new DummyConnection("Desktop2", LocalTime.of(0, 0), 1429),
+                    new DummyConnection("Desktop3", LocalTime.of(0, 0), 1429),
+                    new DummyConnection("Laptop1", LocalTime.of(0, 0), 1429),
+                    new DummyConnection("Laptop2", LocalTime.of(0, 0), 1429),
+                    new DummyConnection("Laptop3", LocalTime.of(0, 0), 1429),
+                    new DummyConnection("Desktop4inthezone", LocalTime.of(16, 57), 412),
+                }
+            ).expectDevice(
+                "DesktopDevice", "Desktop1", 290, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop2", 320, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop3", 350, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop4inthezone", 40, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop1", 275, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop2", 305, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop3", 335, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).toString();
+        
+        TestHelper plan = new TestHelper()
+            .createDevice("LaptopDevice", "Laptop1", 275)
+            .scheduleDeviceActivation("Laptop1", LocalTime.of(0,0), 1439)
+            .createDevice("DesktopDevice", "Desktop1", 290)
+            .scheduleDeviceActivation("Desktop1", LocalTime.of(0,0), 1439)
+            .createDevice("LaptopDevice", "Laptop2", 305)
+            .scheduleDeviceActivation("Laptop2", LocalTime.of(0,0), 1439)
+            .createDevice("DesktopDevice", "Desktop2", 320)
+            .scheduleDeviceActivation("Desktop2", LocalTime.of(0,0), 1439)
+            .createDevice("LaptopDevice", "Laptop3", 335)
+            .scheduleDeviceActivation("Laptop3", LocalTime.of(0,0), 1439)
+            .createDevice("DesktopDevice", "Desktop3", 350)
+            .scheduleDeviceActivation("Desktop3", LocalTime.of(0,0), 1439)
+            .createDevice("DesktopDevice", "Desktop4inthezone", 40)
+            .scheduleDeviceActivation("Desktop4inthezone", LocalTime.of(0,0), 1439)
+            .createSatellite("NasaSatellite", "Nasa", 8000, 310)
+            .showWorldState(initially)
+            .simulate(1440)
+            .showWorldState(oneDayAfter);
+        plan.executeTestPlan();
+    }
+
+    @Test
+    public void testOutside3040RegionNoConnectForNasa() {
+        // Tests if a device in the region [30,40] connects to the Nasa Satellite
+        // if the Nasa Satellite already has 6 connections
+        /* 
+            CLI commands:
+            > createDevice LaptopDevice Laptop1 275.00
+            < 
+            > scheduleDeviceActivation Laptop1 00:00 1439
+            <
+            > createDevice DesktopDevice Desktop1 290.00
+            < 
+            > scheduleDeviceActivation Desktop1 00:00 1439
+            <
+            > createDevice LaptopDevice Laptop2 305.00
+            < 
+            > scheduleDeviceActivation Laptop2 00:00 1439
+            <
+            > createDevice DesktopDevice Desktop2 320.00
+            < 
+            > scheduleDeviceActivation Desktop2 00:00 1439
+            <
+            > createDevice LaptopDevice Laptop3 335.00
+            <
+            > scheduleDeviceActivation Laptop3 00:00 1439
+            <
+            > createDevice DesktopDevice Desktop3 350.00
+            <
+            > scheduleDeviceActivation Desktop3 00:00 1439
+            <
+            > createDevice DesktopDevice Desktop4notinthezone 41.00
+            <
+            > scheduleDeviceActivation Desktop4notinthezone 00:00 1439
+            <
+            > createSatellite NasaSatellite Nasa 8000.00 310.00
+            <
+            > showWorldState
+            < { <WorldState> }
+            > simulate 1440
+            <
+            > showWorldState
+            < { <WorldState> }
+        */
+        String initially = new ResponseHelper(LocalTime.of(0,0))
+            .expectSatellite(
+                "NasaSatellite", "Nasa", 8000, 310, 85, 
+                new String[] {
+                    "Desktop1", "Desktop2", "Desktop3", "Laptop1", "Laptop2", "Laptop3"
+                }
+            ).expectDevice(
+                "DesktopDevice", "Desktop1", 290, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop2", 320, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop3", 350, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop4notinthezone", 41, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop1", 275, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop2", 305, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop3", 335, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).toString();
+        
+        String oneDayAfter = new ResponseHelper(LocalTime.of(0,0))
+            .expectSatellite(
+                "NasaSatellite", "Nasa", 8000, 325.3, 85, 
+                new String[] {
+                    "Desktop1", "Desktop2", "Desktop3", "Desktop4notinthezone", "Laptop1", "Laptop2", "Laptop3"
+                }, 
+                new DummyConnection[] {
+                    new DummyConnection("Desktop1", LocalTime.of(0, 0), 1429),
+                    new DummyConnection("Desktop2", LocalTime.of(0, 0), 1429),
+                    new DummyConnection("Desktop3", LocalTime.of(0, 0), 1429),
+                    new DummyConnection("Laptop1", LocalTime.of(0, 0), 1429),
+                    new DummyConnection("Laptop2", LocalTime.of(0, 0), 1429),
+                    new DummyConnection("Laptop3", LocalTime.of(0, 0), 1429),
+                }
+            ).expectDevice(
+                "DesktopDevice", "Desktop1", 290, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop2", 320, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop3", 350, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop4notinthezone", 41, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop1", 275, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop2", 305, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop3", 335, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).toString();
+        
+        TestHelper plan = new TestHelper()
+            .createDevice("LaptopDevice", "Laptop1", 275)
+            .scheduleDeviceActivation("Laptop1", LocalTime.of(0,0), 1439)
+            .createDevice("DesktopDevice", "Desktop1", 290)
+            .scheduleDeviceActivation("Desktop1", LocalTime.of(0,0), 1439)
+            .createDevice("LaptopDevice", "Laptop2", 305)
+            .scheduleDeviceActivation("Laptop2", LocalTime.of(0,0), 1439)
+            .createDevice("DesktopDevice", "Desktop2", 320)
+            .scheduleDeviceActivation("Desktop2", LocalTime.of(0,0), 1439)
+            .createDevice("LaptopDevice", "Laptop3", 335)
+            .scheduleDeviceActivation("Laptop3", LocalTime.of(0,0), 1439)
+            .createDevice("DesktopDevice", "Desktop3", 350)
+            .scheduleDeviceActivation("Desktop3", LocalTime.of(0,0), 1439)
+            .createDevice("DesktopDevice", "Desktop4notinthezone", 41)
+            .scheduleDeviceActivation("Desktop4notinthezone", LocalTime.of(0,0), 1439)
+            .createSatellite("NasaSatellite", "Nasa", 8000, 310)
+            .showWorldState(initially)
+            .simulate(1440)
+            .showWorldState(oneDayAfter);
+        plan.executeTestPlan();
+    }
+
+    @Test
+    public void maxLaptopsAndDesktopsForBlueOrigin() {
+        // Tests if there isn't too many laptop and desktop
+        // connections for the Blue Origin Satellite 
+        /* 
+            CLI commands:
+            > createDevice LaptopDevice Laptop1 275.00
+            < 
+            > scheduleDeviceActivation Laptop1 00:00 1439
+            <
+            > createDevice DesktopDevice Desktop1 290.00
+            < 
+            > scheduleDeviceActivation Desktop1 00:00 1439
+            <
+            > createDevice LaptopDevice Laptop2 305.00
+            < 
+            > scheduleDeviceActivation Laptop2 00:00 1439
+            <
+            > createDevice DesktopDevice Desktop2 320.00
+            < 
+            > scheduleDeviceActivation Desktop2 00:00 1439
+            <
+            > createDevice LaptopDevice Laptop3 335.00
+            <
+            > scheduleDeviceActivation Laptop3 00:00 1439
+            <
+            > createDevice DesktopDevice Desktop3 350.00
+            <
+            > scheduleDeviceActivation Desktop3 00:00 1439
+            <
+            > createDevice LaptopDevice Laptop4 5.00
+            <
+            > scheduleDeviceActivation Laptop4 00:00 1439
+            <
+            > createDevice LaptopDevice Laptop5 10.00
+            <
+            > scheduleDeviceActivation Laptop5 00:00 1439
+            <
+            > createDevice LaptopDevice Laptop6 20.00
+            <
+            > scheduleDeviceActivation Laptop6 00:00 1439
+            <
+            > createSatellite BlueOriginSatellite BlueOrigin 8000.00 310.00
+            <
+            > showWorldState
+            < { <WorldState> }
+            > simulate 1440
+            <
+            > showWorldState
+            < { <WorldState> }
+        */
+        String initially = new ResponseHelper(LocalTime.of(0,0))
+            .expectSatellite(
+                "BlueOriginSatellite", "BlueOrigin", 8000, 310, 141.66, 
+                new String[] {
+                    "Desktop1", "Desktop2", "Desktop3", "Laptop1", "Laptop2",
+                    "Laptop3", "Laptop4", "Laptop5", "Laptop6"
+                }
+            ).expectDevice(
+                "DesktopDevice", "Desktop1", 290, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop2", 320, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop3", 350, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop1", 275, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop2", 305, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop3", 335, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop4", 5, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop5", 10, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop6", 20, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).toString();
+        
+        String oneDayAfter = new ResponseHelper(LocalTime.of(0,0))
+            .expectSatellite(
+                "BlueOriginSatellite", "BlueOrigin", 8000, 335.5, 141.66, 
+                new String[] {
+                    "Desktop1", "Desktop2", "Desktop3", "Laptop1", "Laptop2",
+                    "Laptop3", "Laptop4", "Laptop5", "Laptop6"
+                },
+                new DummyConnection[] {
+                    new DummyConnection("Desktop1", LocalTime.of(0, 0), 1434),
+                    new DummyConnection("Desktop2", LocalTime.of(0, 0), 1434),
+                    new DummyConnection("Laptop1", LocalTime.of(0, 0), 1437),
+                    new DummyConnection("Laptop2", LocalTime.of(0, 0), 1437),
+                    new DummyConnection("Laptop3", LocalTime.of(0, 0), 1437),
+                    new DummyConnection("Laptop4", LocalTime.of(0, 0), 1437),
+                    new DummyConnection("Laptop5", LocalTime.of(0, 0), 1437)
+                }
+            ).expectDevice(
+                "DesktopDevice", "Desktop1", 290, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop2", 320, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "DesktopDevice", "Desktop3", 350, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop1", 275, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop2", 305, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop3", 335, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop4", 5, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop5", 10, true,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).expectDevice(
+                "LaptopDevice", "Laptop6", 20, false,
+                new LocalTime[][] { { LocalTime.of(0, 0), LocalTime.of(23, 59) } }
+            ).toString();
+        
+        TestHelper plan = new TestHelper()
+            .createDevice("LaptopDevice", "Laptop1", 275)
+            .scheduleDeviceActivation("Laptop1", LocalTime.of(0,0), 1439)
+            .createDevice("DesktopDevice", "Desktop1", 290)
+            .scheduleDeviceActivation("Desktop1", LocalTime.of(0,0), 1439)
+            .createDevice("LaptopDevice", "Laptop2", 305)
+            .scheduleDeviceActivation("Laptop2", LocalTime.of(0,0), 1439)
+            .createDevice("DesktopDevice", "Desktop2", 320)
+            .scheduleDeviceActivation("Desktop2", LocalTime.of(0,0), 1439)
+            .createDevice("LaptopDevice", "Laptop3", 335)
+            .scheduleDeviceActivation("Laptop3", LocalTime.of(0,0), 1439)
+            .createDevice("DesktopDevice", "Desktop3", 350)
+            .scheduleDeviceActivation("Desktop3", LocalTime.of(0,0), 1439)
+            .createDevice("LaptopDevice", "Laptop4", 5)
+            .scheduleDeviceActivation("Laptop4", LocalTime.of(0,0), 1439)
+            .createDevice("LaptopDevice", "Laptop5", 10)
+            .scheduleDeviceActivation("Laptop5", LocalTime.of(0,0), 1439)
+            .createDevice("LaptopDevice", "Laptop6", 20)
+            .scheduleDeviceActivation("Laptop6", LocalTime.of(0,0), 1439)
+            .createSatellite("BlueOriginSatellite", "BlueOrigin", 8000, 310)
             .showWorldState(initially)
             .simulate(1440)
             .showWorldState(oneDayAfter);
