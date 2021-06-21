@@ -2,7 +2,6 @@ package unsw.blackout;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -11,7 +10,6 @@ import unsw.blackout.devices.*;
 import unsw.blackout.satellites.*;
 
 public class Blackout {
-
     private WorldState worldState;
 
     // Constructor
@@ -20,16 +18,32 @@ public class Blackout {
     }
 
     public void createDevice(String id, String type, double position) {
-        if (type.equals("HandheldDevice"))    worldState.addDevice(new HandheldDevice(id, position));
-        else if (type.equals("LaptopDevice")) worldState.addDevice(new LaptopDevice(id, position));
-        else                                  worldState.addDevice(new DesktopDevice(id, position));
+        if (type.equals("HandheldDevice"))      
+            worldState.addDevice(new HandheldDevice(id, position));
+
+        else if (type.equals("LaptopDevice"))   
+            worldState.addDevice(new LaptopDevice(id, position));
+
+        else if (type.equals("MobileXDevice"))  
+            worldState.addDevice(new MobileXDevice(id, position));
+
+        else if (type.equals("AWSCloudServer")) 
+            worldState.addDevice(new AWSCloudServer(id, position));
+
+        else                                    
+            worldState.addDevice(new DesktopDevice(id, position));
+        worldState.sortDevices();
     }
 
     public void createSatellite(String id, String type, double height, double position) {
-        if (type.equals("SpaceXSatellite"))          worldState.addSatellite(new SpaceXSatellite(height, id, position));
-        else if (type.equals("BlueOriginSatellite")) worldState.addSatellite(new BlueOriginSatellite(height, id, position));
-        else if (type.equals("NasaSatellite"))       worldState.addSatellite(new NasaSatellite(height, id, position));
-        else                                         worldState.addSatellite(new SovietSatellite(height, id, position));
+        if (type.equals("SpaceXSatellite"))          
+            worldState.addSatellite(new SpaceXSatellite(height, id, position));
+        else if (type.equals("BlueOriginSatellite")) 
+            worldState.addSatellite(new BlueOriginSatellite(height, id, position));
+        else if (type.equals("NasaSatellite"))       
+            worldState.addSatellite(new NasaSatellite(height, id, position));
+        else                                         
+            worldState.addSatellite(new SovietSatellite(height, id, position));
     }
 
     public void scheduleDeviceActivation(String deviceId, LocalTime start, int durationInMinutes) throws Exception {
@@ -101,6 +115,8 @@ public class Blackout {
         } // ],
     
         // "satellites" : [
+        //? Note that print WorldState satellites by alphabetical order
+        worldState.sortSatellitesByAlphabet();
         for (Satellite satellite : worldState.getSatellites()) { // {
             JSONObject map = new JSONObject();                       
             JSONArray connections = new JSONArray();                        // "connections" : [
@@ -145,82 +161,130 @@ public class Blackout {
 
     public void simulate(int tickDurationInMinutes) throws Exception {
         for (int i = 0; i < tickDurationInMinutes; i++) {
-            
-            //* It is now the next minute
-            worldState.nextMinute();
-            
+        
             //* Update satellite positions
             for (Satellite satellite : worldState.getSatellites()) 
                 satellite.newPosOneMinLater();
-            
+
             //* Update connections
+            // Sort out the satellites by angle (smaller angle high priority)
+            worldState.sortSatellitesByAngle(); 
+            // Loop through devices
             for (Device device : worldState.getDevices()) {
+                // If device is connected --> see any connections to close
                 if (device.isConnected()) {
-                    SatelliteConnection connection = findActiveConnectionByDevice(device);
-                    Satellite connectedSatellite = connection.getSatellite();
-                    if (
-                        !(device.inActivationPeriod(worldState.getTime())) || 
-                        !(MathsHelper.satelliteIsVisibleFromDevice(connectedSatellite.getPosition(), connectedSatellite.getHeight(), device.getPosition()))
-                    ) {
-                        connection.terminateConnection(worldState.getTime());
+                    // Get a list of connections
+                    ArrayList<SatelliteConnection> connections = findActiveConnectionsByDevice(device);
+                    // Loop through connections
+                    for (SatelliteConnection connection : connections) {
+                        // Get the satellite that's connected to the device
+                        Satellite connectedSatellite = connection.getSatellite();
+                        // If the device is no longer in activation period or satellite is no longer visible
+                        if (
+                            !(device.inActivationPeriod(worldState.getTime())) || 
+                            !(MathsHelper.satelliteIsVisibleFromDevice(connectedSatellite.getPosition(), connectedSatellite.getHeight(), device.getPosition()))
+                        ) {
+                            // Disconnect it
+                            connection.terminateConnection(worldState.getTime());
+                        }
+                        // Update minutesActive for that connection
+                        connection.updateMinutesActive(worldState.getTime());
                     }
-                    connection.updateMinutesActive(worldState.getTime());
                 } 
-                if (!(device.isConnected()) && device.inActivationPeriod(worldState.getTime())) {
-                    HashMap<String, ArrayList<Satellite>> sortedSatelliteList = findSatellitesForDevice(device);
-                    if (sortedSatelliteList.isEmpty()) continue;
-                    else if (!sortedSatelliteList.get("SpaceXSatellite").isEmpty()) { 
-                        SatelliteConnection connection = connectDeviceToSatellite(device, sortedSatelliteList.get("SpaceXSatellite").get(0));
+                // If device is in activation period
+                if (device.inActivationPeriod(worldState.getTime())) {
+                    // Get a list of available satellites (priority considered)
+                    ArrayList<Satellite> satelliteList = findSatellitesForDevice(device);
+                    // If AWS Cloud Server
+                    if (device.getType().equals("AWSCloudServer")) {
+                        // If there's no connections but 2 available satellites
+                        if (device.getNumberOfActiveConnections() == 0 && satelliteList.size() >= 2) {
+                            // Connect both
+                            SatelliteConnection connection1 = connectDeviceToSatellite(device, satelliteList.get(0));
+                            SatelliteConnection connection2 = connectDeviceToSatellite(device, satelliteList.get(1));
+                            connection1.updateMinutesActive(worldState.getTime());
+                            connection2.updateMinutesActive(worldState.getTime());
+                        } else if (device.getNumberOfActiveConnections() == 1) {
+                            // If there's only 1 connection
+                            // if there are other satellites available
+                            if (!satelliteList.isEmpty()) {
+                                // Connect it
+                                SatelliteConnection connection = connectDeviceToSatellite(device, satelliteList.get(0));
+                                connection.updateMinutesActive(worldState.getTime());
+                            } else {
+                                // Otherwise disconnect the remaining connection
+                                ArrayList<SatelliteConnection> connections = findActiveConnectionsByDevice(device);
+                                for (SatelliteConnection connection : connections) {
+                                    connection.terminateConnection(worldState.getTime());
+                                    connection.updateMinutesActive(worldState.getTime());
+                                }
+                            }
+                        }
+                    } else if (!device.isConnected()) {
+                        // If not AWS and is not connected
+                        // If no available satellites, onto the next device
+                        if (satelliteList.isEmpty()) continue;
+                        // If it is a Mobile X Device --> Priority is Space X Satellite
+                        if (device.getType().equals("MobileXDevice")) {
+                            ArrayList<Satellite> spaceXList = findSpaceX(satelliteList);
+                            // If there is a Space X Satellite available
+                            if (!spaceXList.isEmpty()) {
+                                SatelliteConnection connection = connectDeviceToSatellite(device, spaceXList.get(0));
+                                connection.updateMinutesActive(worldState.getTime());
+                                continue;
+                            }
+                        }
+                        // Otherwise connect to what's available
+                        SatelliteConnection connection = connectDeviceToSatellite(device, satelliteList.get(0));
                         connection.updateMinutesActive(worldState.getTime());
-                    } else if (!sortedSatelliteList.get("BlueOriginSatellite").isEmpty()) {
-                        SatelliteConnection connection = connectDeviceToSatellite(device, sortedSatelliteList.get("BlueSpaceSatellite").get(0));
-                        connection.updateMinutesActive(worldState.getTime());
-                    } else if (!sortedSatelliteList.get("SovietSatellite").isEmpty()) {
-                        SatelliteConnection connection = connectDeviceToSatellite(device, sortedSatelliteList.get("SovietSatellite").get(0));
-                        connection.updateMinutesActive(worldState.getTime());
-                    } else if (!sortedSatelliteList.get("NasaSatellite").isEmpty()) {
-                        SatelliteConnection connection = connectDeviceToSatellite(device, sortedSatelliteList.get("NasaSatellite").get(0));
-                        connection.updateMinutesActive(worldState.getTime());
-                    } 
+                    }
                 }
             }
+
+            //* It is now the next minute
+            worldState.nextMinute();
         } 
     }
 
     //* Helper Functions
     // Finds the active connection of a device
-    public SatelliteConnection findActiveConnectionByDevice(Device device) throws Exception {
+    public ArrayList<SatelliteConnection> findActiveConnectionsByDevice(Device device) {
+        ArrayList<SatelliteConnection> l = new ArrayList<SatelliteConnection>();
         for (Satellite satellite : worldState.getSatellites()) {
             for (SatelliteConnection connection : satellite.getActiveConnections()) {
-                if (connection.getDeviceId().equals(device.getId())) return connection;
+                if (connection.getDeviceId().equals(device.getId())) 
+                l.add(connection);
             }
         }
-        throw new Exception("No Active Connection Exists for this Device");
+        return l;
     }
 
     // Finds available satellites for a device and sorts them by type
-    public HashMap<String, ArrayList<Satellite>> findSatellitesForDevice(Device device) {
-        HashMap<String, ArrayList<Satellite>> sortedList = new HashMap<String, ArrayList<Satellite>>();
-        sortedList.put("SpaceXSatellite", new ArrayList<Satellite>());
-        sortedList.put("BlueOriginSatellite", new ArrayList<Satellite>());
-        sortedList.put("NasaSatellite", new ArrayList<Satellite>());
-        sortedList.put("SovietSatellite", new ArrayList<Satellite>());
+    public ArrayList<Satellite> findSatellitesForDevice(Device device) throws Exception {
+        ArrayList<Satellite> list = new ArrayList<Satellite>();
         for (Satellite satellite : worldState.getSatellites()) {
+            if (hasExistingConnection(device, satellite)) continue;
             if (MathsHelper.satelliteIsVisibleFromDevice(satellite.getPosition(), satellite.getHeight(), device.getPosition())) {
                 if (satellite.getType().equals("SpaceXSatellite") && device.getType().equals("HandheldDevice"))
-                    sortedList.get(satellite.getType()).add(satellite);
+                    list.add(satellite);
                 else if (satellite.getType().equals("BlueOriginSatellite")) {
-                    if (satellite.getActiveConnections().size() < 11 && satellite.getLaptopConnections() < 6 && satellite.getDesktopConnections() < 3) 
-                        sortedList.get(satellite.getType()).add(satellite);
+                    if (satellite.getActiveConnections().size() < 11) {
+                        if (device.getType().equals("HandheldDevice"))
+                            list.add(satellite);
+                        else if (device.getType().equals("LaptopDevice") && satellite.getLaptopConnections() < 6)
+                            list.add(satellite);
+                        else if (device.getType().equals("DesktopDevice") && satellite.getDesktopConnections() < 3)
+                            list.add(satellite);
+                    }
                 } else if (satellite.getType().equals("SovietSatellite") && !device.getType().equals("HandheldDevice"))
-                    sortedList.get(satellite.getType()).add(satellite);
+                    list.add(satellite);
                 else if (satellite.getType().equals("NasaSatellite")) {
                     if ((satellite.getActiveConnections().size() == 6 && device.getPosition() >= 30 && device.getPosition() <= 40 && satellite.hasActiveConnectionOutside3040()) || satellite.getActiveConnections().size() < 6)
-                        sortedList.get(satellite.getType()).add(satellite);
+                        list.add(satellite);
                 }
             }
         }
-        return sortedList;
+        return list;
     }
     
     // Connects device and satellite
@@ -236,9 +300,26 @@ public class Blackout {
                 }
             }
         }
+        // System.out.println("[" + device.getId() + ", " + satellite.getId() + "]");
         device.setConnection(true);
+        device.addOneToNumberOfConnections();
         SatelliteConnection connection = new SatelliteConnection(device, satellite, worldState.getTime());
         satellite.addConnection(connection);
         return connection;
+    }
+
+    // Returns an array list containing a SpaceXSatellite
+    public ArrayList<Satellite> findSpaceX(ArrayList<Satellite> satellitesInRange) {
+        ArrayList<Satellite> list = new ArrayList<Satellite>();
+        for (Satellite s : satellitesInRange) {
+            if (s.getType().equals("SpaceXSatellite")) 
+                list.add(s);
+        }
+        return list;
+    }
+    // Determines whether a device and a satellite has an existing connection
+    public boolean hasExistingConnection(Device d, Satellite s) throws Exception {
+        ArrayList<SatelliteConnection> connection = findActiveConnectionsByDevice(d);
+        return !connection.isEmpty();
     }
 }

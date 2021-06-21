@@ -12,6 +12,7 @@ public class Device {
     private double                                position;
     private String                                type;
     private int                                   timeToConnect;
+    private int                                   numberofActiveConnections = 0;
 
     // Constructor
     public Device(String id, double position, String type, int timeToConnect) {
@@ -23,12 +24,13 @@ public class Device {
     }
     
     // Getters
-    public ArrayList<HashMap<String, LocalTime>> getActivationPeriods() { return activationPeriods; }
-    public String                                getId()                { return id; }
-    public boolean                               isConnected()          { return isConnected; }
-    public double                                getPosition()          { return position; }
-    public String                                getType()              { return type; }
-    public int                                   getTimeToConnect()     { return timeToConnect; }
+    public ArrayList<HashMap<String, LocalTime>> getActivationPeriods()         { return activationPeriods; }
+    public String                                getId()                        { return id; }
+    public boolean                               isConnected()                  { return isConnected; }
+    public double                                getPosition()                  { return position; }
+    public String                                getType()                      { return type; }
+    public int                                   getTimeToConnect()             { return timeToConnect; }
+    public int                                   getNumberOfActiveConnections() { return numberofActiveConnections;}
     
     public boolean inActivationPeriod(LocalTime time) {
         for (HashMap<String, LocalTime> activationPeriod : activationPeriods) {
@@ -53,5 +55,11 @@ public class Device {
     }
     public void setConnection(boolean bool) {
         isConnected = bool;
+    }
+    public void addOneToNumberOfConnections() {
+        this.numberofActiveConnections++;
+    }
+    public void minusOneToNumberOfConnections() {
+        this.numberofActiveConnections--;
     }
 }

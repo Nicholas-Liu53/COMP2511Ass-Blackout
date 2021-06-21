@@ -45,7 +45,10 @@ public class SatelliteConnection {
         }
     }
     public void terminateConnection(LocalTime currentTime) {
-        device.setConnection(false);
+        // System.out.println("[" + device.getId() + ", " + satellite.getId() + "]");
+        device.minusOneToNumberOfConnections();
+        if (device.getNumberOfActiveConnections() == 0)
+            device.setConnection(false);
         setEndTime(currentTime);
         satellite.removeActiveConnection(this);
     }
