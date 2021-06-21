@@ -45,7 +45,6 @@ public class SatelliteConnection {
         }
     }
     public void terminateConnection(LocalTime currentTime) {
-        // System.out.println("[" + device.getId() + ", " + satellite.getId() + "]");
         device.minusOneToNumberOfConnections();
         if (device.getNumberOfActiveConnections() == 0)
             device.setConnection(false);
@@ -53,8 +52,8 @@ public class SatelliteConnection {
         satellite.removeActiveConnection(this);
     }
 
-    // HelperFunctions 
+    // Helper Functions 
     public boolean deviceOutside3040() {
-        return getDevice().getPosition() < 30 && getDevice().getPosition() > 40;
+        return getDevice().getPosition() < 30 || getDevice().getPosition() > 40;
     }
 }
